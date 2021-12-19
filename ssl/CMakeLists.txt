@@ -1,6 +1,9 @@
 set(
 	SSL_SRC
 	bio_ssl.c
+	bs_ber.c
+	bs_cbb.c
+	bs_cbs.c
 	d1_both.c
 	d1_lib.c
 	d1_pkt.c
@@ -33,11 +36,8 @@ set(
 	ssl_versions.c
 	t1_enc.c
 	t1_lib.c
-	tls_buffer.c
-	tls_content.c
-	tls12_key_schedule.c
-	tls12_lib.c
 	tls12_record_layer.c
+	tls13_buffer.c
 	tls13_client.c
 	tls13_error.c
 	tls13_handshake.c
@@ -51,32 +51,13 @@ set(
 	tls13_server.c
 )
 
-set(
-	BS_SRC
-	bs_ber.c
-	bs_cbb.c
-	bs_cbs.c
-)
-
-add_library(ssl_obj OBJECT ${SSL_SRC})
-target_include_directories(ssl_obj
+add_library(ssl ${SSL_SRC})
+target_include_directories(ssl
 	PRIVATE
 		.
 		../include/compat
 	PUBLIC
 		../include)
-
-add_library(bs_obj OBJECT ${BS_SRC})
-target_include_directories(bs_obj
-	PRIVATE
-		.
-		../include/compat)
-
-if(BUILD_SHARED_LIBS)
-	add_library(ssl $<TARGET_OBJECTS:ssl_obj> $<TARGET_OBJECTS:bs_obj>)
-else()
-	add_library(ssl $<TARGET_OBJECTS:ssl_obj>)
-endif()
 
 export_symbol(ssl ${CMAKE_CURRENT_SOURCE_DIR}/ssl.sym)
 target_link_libraries(ssl crypto ${PLATFORM_LIBS})
@@ -97,10 +78,3 @@ if(ENABLE_LIBRESSL_INSTALL)
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	)
 endif(ENABLE_LIBRESSL_INSTALL)
-
-# build static library for regression test
-if(BUILD_SHARED_LIBS)
-	add_library(ssl-static STATIC $<TARGET_OBJECTS:ssl_obj>)
-	target_link_libraries(ssl-static crypto-static ${PLATFORM_LIBS})
-endif()
-

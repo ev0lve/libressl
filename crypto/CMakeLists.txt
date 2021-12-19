@@ -1,5 +1,3 @@
-add_definitions(-DLIBRESSL_CRYPTO_INTERNAL)
-
 if(HOST_ASM_ELF_ARMV4)
 	set(
 		ASM_ARMV4_ELF_SRC
@@ -233,7 +231,6 @@ set(
 	malloc-wrapper.c
 	mem_clr.c
 	mem_dbg.c
-	o_fips.c
 	o_init.c
 	o_str.c
 	o_time.c
@@ -255,8 +252,6 @@ set(
 	asn1/a_mbstr.c
 	asn1/a_object.c
 	asn1/a_octet.c
-	asn1/a_pkey.c
-	asn1/a_pubkey.c
 	asn1/a_print.c
 	asn1/a_sign.c
 	asn1/a_strex.c
@@ -276,10 +271,14 @@ set(
 	asn1/asn_pack.c
 	asn1/bio_asn1.c
 	asn1/bio_ndef.c
+	asn1/d2i_pr.c
+	asn1/d2i_pu.c
 	asn1/evp_asn1.c
 	asn1/f_enum.c
 	asn1/f_int.c
 	asn1/f_string.c
+	asn1/i2d_pr.c
+	asn1/i2d_pu.c
 	asn1/n_pkey.c
 	asn1/nsseq.c
 	asn1/p5_pbe.c
@@ -371,9 +370,6 @@ set(
 	buffer/buf_err.c
 	buffer/buf_str.c
 	buffer/buffer.c
-	bytestring/bs_ber.c
-	bytestring/bs_cbb.c
-	bytestring/bs_cbs.c
 	camellia/cmll_cfb.c
 	camellia/cmll_ctr.c
 	camellia/cmll_ecb.c
@@ -413,16 +409,6 @@ set(
 	conf/conf_mall.c
 	conf/conf_mod.c
 	conf/conf_sap.c
-	ct/ct_b64.c
-	ct/ct_err.c
-	ct/ct_log.c
-	ct/ct_oct.c
-	ct/ct_policy.c
-	ct/ct_prn.c
-	ct/ct_sct.c
-	ct/ct_sct_ctx.c
-	ct/ct_vfy.c
-	ct/ct_x509v3.c
 	curve25519/curve25519-generic.c
 	curve25519/curve25519.c
 	des/cbc_cksm.c
@@ -740,11 +726,9 @@ set(
 	x509/pcy_map.c
 	x509/pcy_node.c
 	x509/pcy_tree.c
-	x509/x509_addr.c
 	x509/x509_akey.c
 	x509/x509_akeya.c
 	x509/x509_alt.c
-	x509/x509_asid.c
 	x509/x509_att.c
 	x509/x509_bcons.c
 	x509/x509_bitst.c
@@ -984,28 +968,21 @@ if(EXTRA_EXPORT)
 	endforeach()
 endif()
 
-set(LIBTLS_EXTRA_EXPORT ${EXTRA_EXPORT} PARENT_SCOPE)
-
-add_library(crypto_obj OBJECT ${CRYPTO_SRC})
-target_include_directories(crypto_obj
+add_library(crypto ${CRYPTO_SRC})
+target_include_directories(crypto
 	PRIVATE
 		.
 		asn1
 		bn
-		bytestring
 		dsa
 		ec
 		ecdh
 		ecdsa
 		evp
-		hmac
 		modes
-		x509
 		../include/compat
 	PUBLIC
 		../include)
-
-add_library(crypto $<TARGET_OBJECTS:crypto_obj>)
 
 export_symbol(crypto ${CMAKE_CURRENT_BINARY_DIR}/crypto_p.sym)
 target_link_libraries(crypto ${PLATFORM_LIBS})
@@ -1026,10 +1003,3 @@ if(ENABLE_LIBRESSL_INSTALL)
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	)
 endif(ENABLE_LIBRESSL_INSTALL)
-
-# build static library for regression test
-if(BUILD_SHARED_LIBS)
-	add_library(crypto-static STATIC $<TARGET_OBJECTS:crypto_obj>)
-	target_link_libraries(crypto-static ${PLATFORM_LIBS})
-endif()
-

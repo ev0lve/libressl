@@ -68,15 +68,10 @@ char buf[1]; getentropy(buf, 1);
 		;;
 	*hpux*)
 		HOST_OS=hpux;
-		if test "`echo $host_os | cut -c 1-4`" = "ia64" ; then
-			if test "`echo $CC | cut -d ' ' -f 1`" = "gcc" ; then
-				CFLAGS="$CFLAGS -mlp64"
-			else
-				CFLAGS="+DD64"
-			fi
-		fi
-		if ! test "`echo $CC | cut -d ' ' -f 1`" = "gcc" ; then
-			CFLAGS="-g -O2 +Otype_safety=off $CFLAGS $USER_CFLAGS"
+		if test "`echo $CC | cut -d ' ' -f 1`" = "gcc" ; then
+			CFLAGS="$CFLAGS -mlp64"
+		else
+			CFLAGS="-g -O2 +DD64 +Otype_safety=off $USER_CFLAGS"
 		fi
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=600 -D__STRICT_ALIGNMENT"
 		;;
@@ -128,20 +123,10 @@ char buf[1]; getentropy(buf, 1);
 	*) ;;
 esac
 
-# Check if time_t is sized correctly
-AC_CHECK_SIZEOF([time_t], [time.h])
-AM_CONDITIONAL([SMALL_TIME_T], [test "$ac_cv_sizeof_time_t" = "4"])
-if test "$ac_cv_sizeof_time_t" = "4"; then
-    AC_DEFINE([SMALL_TIME_T])
-    echo " ** Warning, this system is unable to represent times past 2038"
-    echo " ** It will behave incorrectly when handling valid RFC5280 dates"
-
-    if test "$host_os" = "mingw32" ; then
-        echo " **"
-        echo " ** You can solve this by adjusting the build flags in your"
-        echo " ** mingw-w64 toolchain. Refer to README.windows for details."
-    fi
-fi
+AC_ARG_ENABLE([nc],
+	AS_HELP_STRING([--enable-nc], [Enable installing TLS-enabled nc(1)]))
+AM_CONDITIONAL([ENABLE_NC], [test "x$enable_nc" = xyes])
+AM_CONDITIONAL([BUILD_NC],  [test x$BUILD_NC = xyes -o "x$enable_nc" = xyes])
 
 AM_CONDITIONAL([HOST_AIX],     [test x$HOST_OS = xaix])
 AM_CONDITIONAL([HOST_CYGWIN],  [test x$HOST_OS = xcygwin])

@@ -41,11 +41,14 @@ _pthread_once_win32_cb(PINIT_ONCE once, PVOID param, PVOID *context)
 static inline int
 pthread_once(pthread_once_t *once, void (*cb) (void))
 {
-	BOOL rc = InitOnceExecuteOnce(&once->once, _pthread_once_win32_cb, cb, NULL);
-	if (rc == 0)
-		return -1;
-	else
-		return 0;
+	// BOOL rc = InitOnceExecuteOnce(&once->once, _pthread_once_win32_cb, cb, NULL);
+	// if (rc == 0)
+	// 	return -1;
+	// else
+	// 	return 0;
+
+	_pthread_once_win32_cb(&once->once, cb, NULL);
+	return 0;
 }
 
 typedef DWORD pthread_t;
@@ -99,14 +102,6 @@ static inline int
 pthread_mutex_unlock(pthread_mutex_t *mutex)
 {
 	LeaveCriticalSection(mutex->lock);
-	return 0;
-}
-
-static inline int
-pthread_mutex_destroy(pthread_mutex_t *mutex)
-{
-	DeleteCriticalSection(mutex->lock);
-	free(mutex->lock);
 	return 0;
 }
 

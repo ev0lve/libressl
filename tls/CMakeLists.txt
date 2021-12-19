@@ -29,28 +29,16 @@ else()
 	add_definitions(-DTLS_DEFAULT_CA_FILE=\"${CMAKE_INSTALL_PREFIX}/etc/ssl/cert.pem\")
 endif()
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tls.sym DESTINATION
-	${CMAKE_CURRENT_BINARY_DIR})
-if(LIBTLS_EXTRA_EXPORT)
-	list(SORT LIBTLS_EXTRA_EXPORT)
-	foreach(SYM IN LISTS LIBTLS_EXTRA_EXPORT)
-		file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/tls.sym "${SYM}\n")
-	endforeach()
-endif()
-
-add_library(tls_obj OBJECT ${TLS_SRC})
-target_include_directories(tls_obj
+add_library(tls ${TLS_SRC})
+target_include_directories(tls
 	PRIVATE
 		.
 		../include/compat
 	PUBLIC
 		../include)
 
-add_library(tls $<TARGET_OBJECTS:tls_obj> $<TARGET_OBJECTS:ssl_obj>
-	$<TARGET_OBJECTS:crypto_obj>)
-
-export_symbol(tls ${CMAKE_CURRENT_BINARY_DIR}/tls.sym)
-target_link_libraries(tls ${PLATFORM_LIBS})
+export_symbol(tls ${CMAKE_CURRENT_SOURCE_DIR}/tls.sym)
+target_link_libraries(tls ssl crypto ${PLATFORM_LIBS})
 if (WIN32)
 	set(TLS_POSTFIX -${TLS_MAJOR_VERSION})
 endif()
@@ -68,11 +56,3 @@ if(ENABLE_LIBRESSL_INSTALL)
 		RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 	)
 endif(ENABLE_LIBRESSL_INSTALL)
-
-# build static library for regression test
-if(BUILD_SHARED_LIBS)
-	add_library(tls-static STATIC $<TARGET_OBJECTS:tls_obj>
-		$<TARGET_OBJECTS:ssl_obj> $<TARGET_OBJECTS:crypto_obj>)
-	target_link_libraries(tls-static ${PLATFORM_LIBS})
-endif()
-

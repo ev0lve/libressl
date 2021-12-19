@@ -1,11 +1,6 @@
 AC_DEFUN([CHECK_LIBC_COMPAT], [
 # Check for libc headers
-AC_CHECK_HEADERS([endian.h err.h readpassphrase.h])
-AC_CHECK_HEADERS([netinet/ip.h], [], [],
-[#include <sys/types.h>
-#include <arpa/inet.h>
-])
-AC_HEADER_RESOLV
+AC_CHECK_HEADERS([err.h readpassphrase.h])
 # Check for general libc functions
 AC_CHECK_FUNCS([asprintf freezero memmem])
 AC_CHECK_FUNCS([readpassphrase reallocarray recallocarray])
@@ -14,7 +9,10 @@ AC_CHECK_FUNCS([timegm _mkgmtime timespecsub])
 AC_CHECK_FUNCS([getprogname syslog syslog_r])
 AC_CACHE_CHECK([for getpagesize], ac_cv_func_getpagesize, [
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <unistd.h>
+// Since Android NDK v16 getpagesize is defined as inline inside unistd.h
+#ifdef __ANDROID__
+#	include <unistd.h>
+#endif
 		]], [[
 	getpagesize();
 ]])],
